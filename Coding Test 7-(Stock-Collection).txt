@@ -1,0 +1,152 @@
+/*
+We are developing a stock trading data management software that tracks the prices of different stocks over time and provides useful statistics.
+
+The program includes three classes: `Stock`, `PriceRecord`, and `StockCollection`.
+
+Classes:
+* The `Stock` class represents data about a specific stock.
+* The `PriceRecord` class holds information about a single price record for a stock.
+* The `StockCollection` class manages a collection of price records for a particular stock and provides methods to retrieve useful statistics about the stock's prices.
+
+To begin with, we present you with two tasks:
+1-1) Read through and understand the code below. Please take as much time as necessary, and feel free to run the code.
+1-2) The test for StockCollection is not passing due to a bug in the code. Make the necessary changes to StockCollection to fix the bug.
+*/
+import java.io.*;
+import java.util.*;
+import org.junit.*;
+
+class Stock {
+  /** Data about a particular stock. */
+  String symbol; // String, the symbol of the stock
+  String name; // String, the name of the stock
+
+  Stock(String symbol, String name) {
+    this.symbol = symbol;
+    this.name = name;
+  }
+
+  @Override
+  public boolean equals(Object other) {
+      if (this == other) return true;
+      if (other == null || getClass() != other.getClass()) return false;
+      Stock stock = (Stock) other;
+      return symbol.equals(stock.symbol) && name.equals(stock.name);
+  }
+  @Override
+  public int hashCode() {
+    return java.util.Objects.hash(symbol, name);
+  }
+}
+
+class PriceRecord {
+  /** Data and methods about a single price record of a stock. */
+  Stock stock; // Stock object representing the stock
+  int price; // int, the price of the stock
+  String date; // String, the date of the price record is of the format "YYYY-MM-DD"
+
+  PriceRecord(Stock stock, int price, String date) {
+    this.stock = stock;
+    this.price = price;
+    this.date = date;
+  }
+}
+
+class StockCollection {
+  /**
+   * Data for a collection of price records for a particular stock, and methods for
+   * getting useful statistics about the stock's prices.
+   */
+  ArrayList<PriceRecord> priceRecords = new ArrayList<>(); // list of PriceRecord objects, the price records for this particular stock
+  Stock stock; // Stock, the Stock this StockCollection is for
+  
+  StockCollection(Stock stock) {
+    this.stock = stock;
+  }
+
+  int getNumPriceRecords() {
+    /** Returns the number of PriceRecords in this StockCollection */
+    System.out.println("priceRecords.size()>>"+priceRecords.size());
+    return priceRecords.size();
+  }
+
+  void addPriceRecord(PriceRecord priceRecord) {
+    /** Adds a PriceRecord to this StockCollection. */
+    if (!priceRecord.stock.equals(this.stock)) {
+      throw new IllegalArgumentException("PriceRecord's Stock is not the same as the StockCollection's");
+    }
+    priceRecords.add(priceRecord);
+  }
+
+  int getMaxPrice() {
+    /** Return the maximum price recorded in this StockCollection. */
+    
+    return priceRecords.stream().mapToInt(record -> record.price).max().getAsInt();
+  }
+
+  int getMinPrice() {
+    /** Return the minimum price recorded in this StockCollection. */
+    return priceRecords.stream().mapToInt(record -> record.price).min().getAsInt();
+  }
+
+  double getAvgPrice() {
+    /** Return the average price recorded in this StockCollection. */
+    double total = priceRecords.stream().mapToInt(record -> record.price).sum();
+    return total / priceRecords.size();
+  }
+}
+
+public class Solution {
+  
+  public static void main(String[] args) {
+    testPriceRecord();
+    testStockCollection();
+  }
+  
+  public static void testPriceRecord() {
+    // Test basic PriceRecord functionality
+    System.out.println("Running testPriceRecord");
+    Stock testStock = new Stock("AAPL", "Apple Inc.");
+    PriceRecord testPriceRecord = new PriceRecord(testStock, 100, "2023-07-01");
+
+    Assert.assertEquals(testPriceRecord.stock, testStock);
+    Assert.assertEquals(testPriceRecord.price, 100);
+    Assert.assertEquals(testPriceRecord.date, "2023-07-01");
+  }
+
+  private static StockCollection makeStockCollection(Stock stock, Object[][] priceData) {
+    StockCollection stockCollection = new StockCollection(stock);
+    for (Object[] priceRecordData : priceData) {
+      PriceRecord priceRecord = new PriceRecord(stock, (int) priceRecordData[0], (String) priceRecordData[1]);
+      stockCollection.addPriceRecord(priceRecord);
+    }
+    return stockCollection;
+  }
+
+  public static void testStockCollection() {
+    System.out.println("Running testStockCollection");
+    // Test basic StockCollection functionality
+    Stock testStock = new Stock("AAPL", "Apple Inc.");
+    StockCollection stockCollection = new StockCollection(testStock);
+
+    Assert.assertEquals(0, stockCollection.getNumPriceRecords());
+    System.out.println("stockCollection.getNumPriceRecords()");
+    Assert.assertEquals(-1, stockCollection.getMaxPrice());
+    Assert.assertEquals(-1, stockCollection.getMinPrice());
+    Assert.assertEquals(-1.0, stockCollection.getAvgPrice(), 0.001);
+
+    /*
+     * Price Records: Price: 110 112 90 105 Date: 2023-06-29 2023-07-01 2023-06-28
+     * 2023-07-06
+     */
+    Object[][] priceData = { { 110, "2023-06-29" }, { 112, "2023-07-01" }, { 90, "2023-06-28" },
+        { 105, "2023-07-06" } };
+    testStock = new Stock("AAPL", "Apple Inc.");
+    stockCollection = makeStockCollection(testStock, priceData);
+
+    Assert.assertEquals(priceData.length, stockCollection.getNumPriceRecords());
+    Assert.assertEquals(112, stockCollection.getMaxPrice());
+    Assert.assertEquals(90, stockCollection.getMinPrice());
+    Assert.assertEquals(104.25, stockCollection.getAvgPrice(), 0.1);
+  }
+}
